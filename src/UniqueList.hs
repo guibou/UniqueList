@@ -64,7 +64,7 @@ size (UniqueList _ s) = Set.size s -- set have O(1) size
 -- unpack operator. Here, the inner list will be stored inside `_` (so
 -- ignored) and the inner set will be stored in `s`.
 
--- | Append an element. O(n log n).
+-- | Append an element. O(log n).
 --   If the element is already present, the returned list is unmodified.
 snoc :: Ord t => t -> UniqueList t -> UniqueList t
 snoc i ul@(UniqueList l s)
