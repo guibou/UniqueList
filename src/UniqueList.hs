@@ -45,7 +45,7 @@ data UniqueList t where
 --   Think about it as a struct of two field, a list and a set
 -- However this is important because there is a bidirectional mapping between constructor and pattern matching as you'll see later
 
--- NOTE: all the type annotations (the stuff with `::` are note needed, but it helps to read
+-- NOTE: all the type annotations (the stuff with `::` are not needed, but it helps to read
 -- NOTE: coments with `|` are a special markup for documentation, ala docstring.
 
 -- | Empty one. O(1)
