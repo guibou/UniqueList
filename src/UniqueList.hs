@@ -34,6 +34,7 @@ where
 import qualified Data.Set as Set
 import Data.Monoid ((<>))
 import qualified Data.Sequence as Seq
+import Data.Foldable (toList)
 
 -- | The UniqueList type. Polymorphic on the contained type `t`.
 data UniqueList t where
@@ -79,10 +80,6 @@ fromList :: (Foldable f, Ord t) => f t -> UniqueList t
 fromList l = foldl (flip snoc) empty l
 -- Apply a fold on the input `Foldable`. A `Foldable` is a generalisation of an iterable.
 -- this roughly means that fromList [1,2,3] = snoc 3 (snoc 2 (snoc 1 empty))
-
--- | Convert to a list. O(n)
-toList :: UniqueList t -> [t]
-toList (UniqueList l _) = foldr (:) [] l
 
 -- | `member v l` returns true if `l` contains `v`. O(log n).
 member :: Ord t => t -> UniqueList t -> Bool
