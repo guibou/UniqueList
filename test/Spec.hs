@@ -25,6 +25,7 @@ import qualified Data.List as List
 
 import UniqueList
 import Data.Monoid ((<>))
+import Data.Foldable (toList)
 
 main :: IO ()
 main = hspec $ do

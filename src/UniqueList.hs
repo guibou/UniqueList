@@ -21,7 +21,6 @@ module UniqueList
     size,
     singleton,
     fromList,
-    toList,
     snoc,
     concat,
     member,
@@ -34,7 +33,6 @@ where
 import qualified Data.Set as Set
 import Data.Monoid ((<>))
 import qualified Data.Sequence as Seq
-import Data.Foldable (toList)
 
 -- | The UniqueList type. Polymorphic on the contained type `t`.
 data UniqueList t where
@@ -100,8 +98,8 @@ replace i ul@(UniqueList l s)
 
 -- | Return the element at index. O(n) if present, O(1) else.
 idx :: Int -> UniqueList t -> Maybe t
-idx offset ul
-  | offset < size ul = Just (toList ul !! offset)
+idx offset (UniqueList l _)
+  | offset < Seq.length l = Just (l `Seq.index` offset)
   | otherwise = Nothing
 
 -- Here starts some magic when you don't know Haskell, but actually that's pretty common
