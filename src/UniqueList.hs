@@ -33,10 +33,11 @@ where
 
 import qualified Data.Set as Set
 import Data.Monoid ((<>))
+import qualified Data.Sequence as Seq
 
 -- | The UniqueList type. Polymorphic on the contained type `t`.
 data UniqueList t where
-  UniqueList :: [t] -> Set.Set t -> UniqueList t
+  UniqueList :: (Seq.Seq t) -> Set.Set t -> UniqueList t
 -- The previous line is important, because it defines :
 -- - The type `UniqueList`, which is polymorphic on the type of the contained item.
 -- - The constructor `UniqueList`, which takes a list of t, a set of t and returns an UniqueList t
@@ -48,17 +49,17 @@ data UniqueList t where
 
 -- | Empty one. O(1)
 empty :: UniqueList t
-empty = UniqueList [] (Set.empty)
+empty = UniqueList (Seq.empty) (Set.empty)
 -- this uses the constructor to set an empty list and an empty set
 
 -- | Create a singleton. O(1).
 singleton :: t -> UniqueList t
-singleton v = UniqueList [v] (Set.singleton v)
+singleton v = UniqueList (Seq.singleton v) (Set.singleton v)
 -- See how the constructor is used to create a singleton list and a singleton set
 
 -- | Returns the size. O(1).
 size :: UniqueList t -> Int
-size (UniqueList _ s) = Set.size s -- set have O(1) size
+size (UniqueList l _) = Seq.length l -- sequences have O(1) size
 -- See here how the constructor is used on the left side of an `=`
 -- operator, which means that it is used as a pattern match, or un
 -- unpack operator. Here, the inner list will be stored inside `_` (so
@@ -69,10 +70,9 @@ size (UniqueList _ s) = Set.size s -- set have O(1) size
 snoc :: Ord t => t -> UniqueList t -> UniqueList t
 snoc i ul@(UniqueList l s)
   | i `Set.member` s = ul -- Don't do anything if it is in the set
-  | otherwise = UniqueList (i:l) (Set.insert i s) -- cons it to the list and insert it in the set otherwise
+  | otherwise = UniqueList (l Seq.|> i) (Set.insert i s) -- cons it to the list and insert it in the set otherwise
 -- The a@Pattern syntax means that `ul` will be the unique list, which
 -- will alse be unpacked to l and s. That's just syntax convenience.
--- NOTE: the inner representation stores the list backward
 
 -- | Convert from a foldable. O(n log n).
 fromList :: (Foldable f, Ord t) => f t -> UniqueList t
@@ -82,8 +82,7 @@ fromList l = foldl (flip snoc) empty l
 
 -- | Convert to a list. O(n)
 toList :: UniqueList t -> [t]
-toList (UniqueList l _) = reverse l
--- Recall that the inner representation is reversed...
+toList (UniqueList l _) = foldr (:) [] l
 
 -- | `member v l` returns true if `l` contains `v`. O(log n).
 member :: Ord t => t -> UniqueList t -> Bool
@@ -99,7 +98,7 @@ member v (UniqueList _ s) = v `Set.member` s
 replace :: Ord t => t -> UniqueList t -> UniqueList t
 replace i ul@(UniqueList l s)
   | i `Set.notMember` s = snoc i ul -- if the item is not a member of the set, just snoc it
-  | otherwise = let l' = (i : (filter (/=i) l)) -- otherwise, we build a new inner list by prepending the new value to the previous list where the previous value was filtered...
+  | otherwise = let l' = ((Seq.filter (/=i) l) Seq.|> i) -- otherwise, we build a new inner list by prepending the new value to the previous list where the previous value was filtered...
                 in UniqueList l' s
 
 -- | Return the element at index. O(n) if present, O(1) else.
@@ -119,10 +118,10 @@ instance Show t => Show (UniqueList t) where
 -- I'm using the foldMap instance on the inner list
 -- This gives me fold, and many useful function, such as foldMap, sum, maximum, minimum, ...
 instance Foldable UniqueList where
-  foldMap f (UniqueList l _) = foldMap f (reverse l)
+  foldMap f (UniqueList l _) = foldMap f l
 
 -- I also implemented Monoid, because concatenation of two list is a monoid
 instance Ord t => Monoid (UniqueList t) where
   mempty = empty
   -- | Concat two unique lists. Still biased toward first elements. O(n log n)
-  mappend (UniqueList la _) (UniqueList lb _) = fromList (reverse la <> reverse lb)
+  mappend (UniqueList la _) (UniqueList lb _) = fromList (la <> lb)
